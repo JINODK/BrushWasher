@@ -8,7 +8,7 @@
 
 class OTA {
 public:
-    void setup(char* ssid, char* password, char* hostname) {
+    void setup(const char* ssid, const char* password, const char* hostname) {
         WiFi.mode(WIFI_STA);
         WiFi.begin(ssid, password);
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
