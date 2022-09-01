@@ -29,6 +29,7 @@ uint8_t dryBlow = 200;
 uint8_t stage = 0;
 
 int bttnStat = 0; // 1 - up, 2 - down, 3 - ok
+unsigned long currTime, targetTime;
 char temp[2];
 /*****STAGE COUNT
  * 0 - idle - user pour washing additive
@@ -165,6 +166,131 @@ void loop() {
         stage++;
         break;
     
+    case 1: // washing
+        oled.write("Washing", 0, 0, 1, 0, 0);
+        currTime = millis();
+        targetTime = currTime + (spinTime * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (spinTime - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Washing done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+    
+    case 2: // draining
+        oled.write("Draining", 0, 0, 1, 0, 0);
+        // digitalWrite(VALVE, HIGH);
+        currTime = millis();
+        targetTime = currTime + (drainTime * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (drainTime - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Draining done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+    
+    case 3: // pumping clean water
+        oled.write("Pumping", 0, 0, 1, 0, 0);
+        currTime = millis();
+        targetTime = currTime + (pumpTime * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (pumpTime - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Pumping done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+    
+    case 4: // spinning
+        oled.write("Spin", 0, 0, 1, 0, 0);
+        currTime = millis();
+        targetTime = currTime + (spinTime * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (spinTime - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Spin done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+    case 5: // draining
+        oled.write("Draining", 0, 0, 1, 0, 0);
+        // digitalWrite(VALVE, HIGH);
+        currTime = millis();
+        targetTime = currTime + (drainTime * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (drainTime - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Draining done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+
+    case 6: // dry blow
+        oled.write("Dry blow", 0, 0, 1, 0, 0);
+        // digitalWrite(VALVE, HIGH);
+        currTime = millis();
+        targetTime = currTime + (dryBlow * 1000);
+        while (millis() < targetTime) {
+            // TODO: add cancel function: hold ok button for 1 seconds
+            if (millis() - currTime > 1000) {
+                sprintf(temp, "%02d secs left", (dryBlow - (millis() - currTime) / 1000));
+                oled.write(temp, 0, 7, 1, 0, 1);
+                currTime = millis();
+            }
+        }
+        oled.clear();
+        oled.write("Drying done", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        stage++;
+        break;
+
+    case 7: // done
+        oled.write("Done", 0, 0, 1, 0, 0);
+        while (bttnStat != 3);
+        oled.write("Halting...", 0, 0, 1, 0, 0);
+        delay(1000);
+        oled.clear();
+        for(;;); //halt
+        break;
+
     default:
         break;
     }
