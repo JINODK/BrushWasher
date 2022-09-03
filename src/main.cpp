@@ -17,18 +17,19 @@ const char* hostname = "Mini-washing-machine";
 #define FAN 13
 #define OK_BUTTON 0
 #define UP_BUTTON 16
-#define DOWN_BUTTON 15
+#define MOTOR 15
 
 /*****DEFAULT TIMER CONFIGURATION*****/
 // uint8_t washTime = 30;
 uint8_t spinTime = 30;
-uint8_t spinSpeed = 100;
+uint8_t spinSpeed = 100; // out of 255
 uint8_t drainTime = 10;
 uint8_t pumpTime = 3;
 uint8_t dryBlow = 200;
 // uint8_t stage = 1; // skip over setup stage
 
 int bttnStat = 0; // 1 - up, 2 - down, 3 - ok
+int hold = 0;
 unsigned long currTime, targetTime;
 char temp[32];
 /*****STAGE COUNT
@@ -58,13 +59,35 @@ void IRAM_ATTR okBttn() {
 void taskTimer(char* taskTitle, uint8_t taskTime) {
     unsigned long tarTime = millis() + taskTime * 1000;
     oled.clear();
-    oled.write(taskTitle, 0, 0, 1, 0, 1);
+    oled.write(taskTitle, 0, 0, 1, 0, 0);
     while (millis() < tarTime) {
         sprintf(temp, "%02lu sec left", (tarTime - millis()) / 1000);
         oled.write(temp, 0, 7, 1, 0, 1);
+        if (bttnStat == 3) { // cancel function
+            sprintf(temp, "Cancelling\n%s\nin %d", taskTitle, 3 - int(hold/1000));
+            oled.write(temp, 0, 2, 1, 0, 0);
+            bttnStat = 0;
+            if (hold == 3000) {
+                oled.write((char *)"User\naborted", 0, 1, 2, 0, 1);
+                delay(1000);
+                oled.write((char *)"press to restart", 0, 3, 1, 0, 1);
+                while (bttnStat != 3) {
+                    ota.handle();
+                    delay(1);
+                }
+                ESP.restart();
+
+            } else {
+                hold++;
+            }
+        } else if (hold) {
+            oled.write((char *)"            ", 0, 2, 1, 0, 0);
+            oled.write((char *)"            ", 0, 3, 1, 0, 0);
+            oled.write((char *)"            ", 0, 4, 1, 0, 0);
+            hold = 0;
+        }
         ota.handle();
         delay(1);
-        // TODO: implement cancel function
     }
     oled.clear();
     sprintf(temp, "%s done", taskTitle);
@@ -81,9 +104,19 @@ void setup() {
     pinMode(FAN, OUTPUT);
     pinMode(OK_BUTTON, INPUT_PULLUP);
     pinMode(UP_BUTTON, INPUT_PULLUP);
-    pinMode(DOWN_BUTTON, INPUT_PULLUP);
+    // pinMode(DOWN_BUTTON, INPUT_PULLUP);
+    pinMode(MOTOR, OUTPUT);
+
+    // turn everything off just to be safe
+    analogWrite(MOTOR, 0);
+    digitalWrite(PUMP, LOW);
+    digitalWrite(VALVE, LOW);
+    digitalWrite(HEATER, LOW);
+    digitalWrite(FAN, LOW);
+
+    // button interrupt detection
     attachInterrupt(digitalPinToInterrupt(UP_BUTTON), upBttn, FALLING);
-    attachInterrupt(digitalPinToInterrupt(DOWN_BUTTON), downBttn, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(DOWN_BUTTON), downBttn, FALLING);
     attachInterrupt(digitalPinToInterrupt(OK_BUTTON), okBttn, FALLING);
     oled.clear();
 
@@ -97,33 +130,47 @@ void setup() {
     oled.clear();
     delay(1000);
     // spin motor
+    analogWrite(MOTOR, spinSpeed);
     taskTimer((char *)"Washing", spinTime);
     // stop motor
+    analogWrite(MOTOR, 0);
 
     delay(1000);
     // drain water
+    digitalWrite(VALVE, HIGH);
     taskTimer((char *)"Drain", drainTime);
     // close valve
+    digitalWrite(VALVE, LOW);
 
     delay(1000);
     // start pump
+    digitalWrite(PUMP, HIGH);
     taskTimer((char *)"Pump", pumpTime);
     // stop pump
+    digitalWrite(PUMP, LOW);
 
     delay(1000);
     // spin motor
+    analogWrite(MOTOR, spinSpeed);
     taskTimer((char *)"Spin", spinTime);
     // stop motor
+    analogWrite(MOTOR, 0);
 
     delay(1000);
     // drain water
+    digitalWrite(VALVE, HIGH);
     taskTimer((char *)"Drain", drainTime);
     // close valve
+    digitalWrite(VALVE, LOW);
 
     delay(1000);
     // blow dry
+    digitalWrite(FAN, HIGH);
+    digitalWrite(HEATER, HIGH);
     taskTimer((char *)"Dry blow", dryBlow);
     // stop dryer
+    digitalWrite(FAN, LOW);
+    digitalWrite(HEATER, LOW);
 
     oled.clear();
     oled.write((char *)"Task done\nPress button\nto restart", 0, 0, 1, 0, 1);
