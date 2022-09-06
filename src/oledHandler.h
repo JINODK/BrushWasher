@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include "configurations.h"
 #include "ss_oled.h"
 
 // if your system doesn't have enough RAM for a back buffer, comment out
@@ -55,7 +55,7 @@ public:
             //    that can be configured as either SPI or I2C
             //
             // oledInit(SSOLED *, type, oled_addr, rotate180, invert, bWire, SDA_PIN, SCL_PIN, RESET_PIN, speed)
-            char *msgs[] = {(char *)"SSD1306 @ 0x3C", (char *)"SSD1306 @ 0x3D",(char *)"SH1106 @ 0x3C",(char *)"SH1106 @ 0x3D"};
+            // char *msgs[] = {(char *)"SSD1306 @ 0x3C", (char *)"SSD1306 @ 0x3D",(char *)"SH1106 @ 0x3C",(char *)"SH1106 @ 0x3D"};
             oledFill(&ssoled, 0, 1);
             // oledWriteString(&ssoled, 0, 0, 7, msgs[rc], FONT_NORMAL, 0, 1);
             oledWriteString(&ssoled, 0, 0, 0, (char *)"Tiny washer", FONT_SMALL, 0, 1);

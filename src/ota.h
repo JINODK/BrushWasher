@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include "configurations.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
@@ -12,7 +12,9 @@ public:
         WiFi.mode(WIFI_STA);
         WiFi.begin(ssid, password);
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+            #ifdef DEBUG
             Serial.println("Connection Failed! Operatin' in offline mode with no OTA support.");
+            #endif
             delay(1000);
         }
         ArduinoOTA.setHostname(hostname);

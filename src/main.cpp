@@ -1,34 +1,15 @@
-#include <Arduino.h>
+#include "configurations.h"
+#ifdef OTA
 #include "ota.h"
+#endif
 #include "oledHandler.h"
 #include <Servo.h>
 
+#ifdef OTA
 OTA ota;
+#endif
 OLED oled;
 Servo servo;
-
-/*****HARD-CODED CONFIGURATION*****/
-const char* ssid = "JINODK";
-const char* password = "jinodk2003";
-const char* hostname = "Mini-washing-machine";
-
-/*****HARDWARE PINS DEFINITION*****/
-#define PUMP 15
-#define VALVE 14
-#define HEATER 12
-#define FAN 13
-#define OK_BUTTON 0
-// #define UP_BUTTON 15
-#define MOTOR 16
-
-/*****DEFAULT TIMER CONFIGURATION*****/
-// uint8_t washTime = 30;
-uint8_t spinTime = 5;//30;
-uint8_t spinSpeed = 25; // out of 90
-uint8_t drainTime = 5;//10;
-uint8_t pumpTime = 3;
-uint8_t dryBlow = 6;//200;
-// uint8_t stage = 1; // skip over setup stage
 
 int bttnStat = 0; // 1 - up, 2 - down, 3 - ok
 int hold = 0;
@@ -45,7 +26,7 @@ char temp[32];
  * 7 - idle
 *****/
 
-
+#ifdef USE_BUTTON_INTERRUPT
 void IRAM_ATTR upBttn() {
     bttnStat = 1;
 }
@@ -57,6 +38,7 @@ void IRAM_ATTR downBttn() {
 void IRAM_ATTR okBttn() {
     bttnStat = 3;
 }
+#endif
 
 void taskTimer(char* taskTitle, uint8_t taskTime) {
     unsigned long tarTime = millis() + taskTime * 1000;
@@ -65,7 +47,6 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
     while (millis() < tarTime) {
         sprintf(temp, "%02lu sec left", (tarTime - millis()) / 1000);
         oled.write(temp, 0, 7, 1, 0, 1);
-
         if (!digitalRead(OK_BUTTON)) { // cancel function
             oled.write((char *)"Canelling in", 0, 1, 1, 0, 1);
             sprintf(temp, "%d / 50", hold);
@@ -85,7 +66,11 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
                 delay(1000);
                 bttnStat = 0;
                 oled.write((char *)"press to restart", 0, 7, 1, 0, 1);
+                #ifdef USE_BUTTON_INTERRUPT
                 while (bttnStat != 3) {
+                #else
+                while (!digitalRead(OK_BUTTON)) {
+                #endif
                     // ota.handle();
                     delay(1);
                 }
@@ -99,7 +84,9 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
             oled.write((char *)"            ", 0, 2, 1, 0, 1);
             hold = 0;
         }
+        #ifdef OTA
         ota.handle();
+        #endif
         delay(1);
     }
     oled.clear();
@@ -130,10 +117,14 @@ void setup() {
     digitalWrite(HEATER, LOW);
     digitalWrite(FAN, LOW);
 
+    #ifdef USE_BUTTON_INTERRUPT
     // button interrupt detection
     // attachInterrupt(digitalPinToInterrupt(UP_BUTTON), upBttn, FALLING);
     // attachInterrupt(digitalPinToInterrupt(DOWN_BUTTON), downBttn, FALLING);
     attachInterrupt(digitalPinToInterrupt(OK_BUTTON), okBttn, FALLING);
+    #else
+    pinMode(OK_BUTTON, INPUT_PULLUP);
+    #endif
     oled.clear();
 
 
@@ -141,7 +132,9 @@ void setup() {
     oled.write((char *)"Press button to", 0, 0, 1, 0, 1);
     oled.write((char *)"start...", 0, 1, 1, 0, 1);
     while (bttnStat != 3) {
-        // ota.handle();
+        #ifdef OTA
+        ota.handle();
+        #endif
         delay(1);
     }
     oled.clear();
@@ -195,8 +188,14 @@ void setup() {
     oled.write((char *)"restart", 0, 2, 1, 1, 1);
     delay(100);
     bttnStat = 0;
+    #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
-        // ota.handle();
+    #else
+    while (!digitalRead(OK_BUTTON)) {
+    #endif
+        #ifdef OTA
+        ota.handle();
+        #endif
         delay(1);
     }
     oled.clear();
