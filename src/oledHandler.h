@@ -16,8 +16,8 @@ static uint8_t *ucBackBuffer = NULL;
 // Use -1 for the Wire library default pins
 // or specify the pin numbers to use with the Wire library or bit banging on any GPIO pins
 // These are the pin numbers for the M5Stack Atom default I2C
-#define SDA_PIN -1
-#define SCL_PIN -1
+#define SDA_PIN 4
+#define SCL_PIN 5
 // Set this to -1 to disable or the GPIO pin number connected to the reset
 // line of your display if it requires an external reset
 #define RESET_PIN -1
@@ -57,11 +57,10 @@ public:
             // oledInit(SSOLED *, type, oled_addr, rotate180, invert, bWire, SDA_PIN, SCL_PIN, RESET_PIN, speed)
             char *msgs[] = {(char *)"SSD1306 @ 0x3C", (char *)"SSD1306 @ 0x3D",(char *)"SH1106 @ 0x3C",(char *)"SH1106 @ 0x3D"};
             oledFill(&ssoled, 0, 1);
-            oledWriteString(&ssoled, 0, 0, 7, msgs[rc], FONT_NORMAL, 0, 0);
-            oledWriteString(&ssoled, 0, 0, 0, (char *)"Tiny", FONT_LARGE, 0, 0);
-            oledWriteString(&ssoled, 0, 0, 2, (char *)"Washer", FONT_LARGE, 0, 1);
+            // oledWriteString(&ssoled, 0, 0, 7, msgs[rc], FONT_NORMAL, 0, 1);
+            oledWriteString(&ssoled, 0, 0, 0, (char *)"Tiny washer", FONT_SMALL, 0, 1);
             oledSetBackBuffer(&ssoled, ucBackBuffer);
-            delay(2000);
+            delay(1000);
         }
     }
     void write(char* msg, int x, int y, int fontSize, int invert, int render) {

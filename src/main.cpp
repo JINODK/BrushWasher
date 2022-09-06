@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include "ota.h"
 #include "oledHandler.h"
+#include <Servo.h>
 
 OTA ota;
 OLED oled;
+Servo servo;
 
 /*****HARD-CODED CONFIGURATION*****/
 const char* ssid = "JINODK";
@@ -11,21 +13,21 @@ const char* password = "jinodk2003";
 const char* hostname = "Mini-washing-machine";
 
 /*****HARDWARE PINS DEFINITION*****/
-#define PUMP 2
+#define PUMP 15
 #define VALVE 14
 #define HEATER 12
 #define FAN 13
 #define OK_BUTTON 0
-#define UP_BUTTON 16
-#define MOTOR 15
+// #define UP_BUTTON 15
+#define MOTOR 16
 
 /*****DEFAULT TIMER CONFIGURATION*****/
 // uint8_t washTime = 30;
-uint8_t spinTime = 30;
-uint8_t spinSpeed = 100; // out of 255
-uint8_t drainTime = 10;
+uint8_t spinTime = 5;//30;
+uint8_t spinSpeed = 25; // out of 90
+uint8_t drainTime = 5;//10;
 uint8_t pumpTime = 3;
-uint8_t dryBlow = 200;
+uint8_t dryBlow = 6;//200;
 // uint8_t stage = 1; // skip over setup stage
 
 int bttnStat = 0; // 1 - up, 2 - down, 3 - ok
@@ -59,20 +61,32 @@ void IRAM_ATTR okBttn() {
 void taskTimer(char* taskTitle, uint8_t taskTime) {
     unsigned long tarTime = millis() + taskTime * 1000;
     oled.clear();
-    oled.write(taskTitle, 0, 0, 1, 0, 0);
+    oled.write(taskTitle, 0, 0, 1, 0, 1);
     while (millis() < tarTime) {
         sprintf(temp, "%02lu sec left", (tarTime - millis()) / 1000);
         oled.write(temp, 0, 7, 1, 0, 1);
-        if (bttnStat == 3) { // cancel function
-            sprintf(temp, "Cancelling\n%s\nin %d", taskTitle, 3 - int(hold/1000));
-            oled.write(temp, 0, 2, 1, 0, 0);
-            bttnStat = 0;
-            if (hold == 3000) {
-                oled.write((char *)"User\naborted", 0, 1, 2, 0, 1);
+
+        if (!digitalRead(OK_BUTTON)) { // cancel function
+            oled.write((char *)"Canelling in", 0, 1, 1, 0, 1);
+            sprintf(temp, "%d / 50", hold);
+            oled.write(temp, 0, 2, 1, 0, 1);
+            // bttnStat = 0;
+            if (hold == 50) {
+                // disable everything
+                servo.write(0);
+                digitalWrite(PUMP, LOW);
+                digitalWrite(VALVE, LOW);
+                digitalWrite(HEATER, LOW);
+                digitalWrite(FAN, LOW);
+
+                oled.clear();
+                oled.write((char *)"User", 0, 0, 2, 0, 1);
+                oled.write((char *)"aborted", 0, 3, 2, 0, 1);
                 delay(1000);
-                oled.write((char *)"press to restart", 0, 3, 1, 0, 1);
+                bttnStat = 0;
+                oled.write((char *)"press to restart", 0, 7, 1, 0, 1);
                 while (bttnStat != 3) {
-                    ota.handle();
+                    // ota.handle();
                     delay(1);
                 }
                 ESP.restart();
@@ -81,9 +95,8 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
                 hold++;
             }
         } else if (hold) {
-            oled.write((char *)"            ", 0, 2, 1, 0, 0);
-            oled.write((char *)"            ", 0, 3, 1, 0, 0);
-            oled.write((char *)"            ", 0, 4, 1, 0, 0);
+            oled.write((char *)"            ", 0, 1, 1, 0, 1);
+            oled.write((char *)"            ", 0, 2, 1, 0, 1);
             hold = 0;
         }
         ota.handle();
@@ -96,44 +109,48 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
 
 void setup() {
     Serial.begin(115200);
-    ota.setup(ssid, password, hostname);
+    // ota.setup(ssid, password, hostname);
     oled.setup(); // head to the file to change display's settings
     pinMode(PUMP, OUTPUT);
     pinMode(VALVE, OUTPUT);
     pinMode(HEATER, OUTPUT);
     pinMode(FAN, OUTPUT);
     pinMode(OK_BUTTON, INPUT_PULLUP);
-    pinMode(UP_BUTTON, INPUT_PULLUP);
+    // pinMode(UP_BUTTON, INPUT_PULLUP);
     // pinMode(DOWN_BUTTON, INPUT_PULLUP);
-    pinMode(MOTOR, OUTPUT);
+    servo.attach(MOTOR);
 
+    // arm the ESC
+    servo.writeMicroseconds(1600);
+    delay(10);
+    servo.writeMicroseconds(1000);
     // turn everything off just to be safe
-    analogWrite(MOTOR, 0);
     digitalWrite(PUMP, LOW);
     digitalWrite(VALVE, LOW);
     digitalWrite(HEATER, LOW);
     digitalWrite(FAN, LOW);
 
     // button interrupt detection
-    attachInterrupt(digitalPinToInterrupt(UP_BUTTON), upBttn, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(UP_BUTTON), upBttn, FALLING);
     // attachInterrupt(digitalPinToInterrupt(DOWN_BUTTON), downBttn, FALLING);
     attachInterrupt(digitalPinToInterrupt(OK_BUTTON), okBttn, FALLING);
     oled.clear();
 
 
 
-    oled.write((char *)"Press button\nto start", 0, 0, 1, 0, 1);
+    oled.write((char *)"Press button to", 0, 0, 1, 0, 1);
+    oled.write((char *)"start...", 0, 1, 1, 0, 1);
     while (bttnStat != 3) {
-        ota.handle();
+        // ota.handle();
         delay(1);
     }
     oled.clear();
-    delay(1000);
+    delay(100);
     // spin motor
-    analogWrite(MOTOR, spinSpeed);
+    servo.write(spinSpeed);
     taskTimer((char *)"Washing", spinTime);
     // stop motor
-    analogWrite(MOTOR, 0);
+    servo.write(0);
 
     delay(1000);
     // drain water
@@ -151,10 +168,10 @@ void setup() {
 
     delay(1000);
     // spin motor
-    analogWrite(MOTOR, spinSpeed);
+    servo.write(spinSpeed);
     taskTimer((char *)"Spin", spinTime);
     // stop motor
-    analogWrite(MOTOR, 0);
+    servo.write(0);
 
     delay(1000);
     // drain water
@@ -173,11 +190,18 @@ void setup() {
     digitalWrite(HEATER, LOW);
 
     oled.clear();
-    oled.write((char *)"Task done\nPress button\nto restart", 0, 0, 1, 0, 1);
+    oled.write((char *)"Task done! Press", 0, 0, 1, 0, 1);
+    oled.write((char *)"button to", 0, 1, 1, 0, 1);
+    oled.write((char *)"restart", 0, 2, 1, 1, 1);
+    delay(100);
+    bttnStat = 0;
     while (bttnStat != 3) {
-        ota.handle();
+        // ota.handle();
         delay(1);
     }
+    oled.clear();
+    oled.write((char *)"          owo", 0, 7, 0, 0, 1);
+    oled.write((char *)"             ", 0, 7, 0, 0, 1);
     ESP.restart();
 }
 
