@@ -100,6 +100,7 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
 }
 
 void setup() { 
+    /*****SETUP*****/
     Serial.begin(115200);
     #ifdef OTA
     ota.setup(ssid, password, hostname);
@@ -133,13 +134,13 @@ void setup() {
     oled.clear();
 
 
-
+    /*****ACTUAL PROGRAM*****/
     oled.write((char *)"Press button to", 0, 0, 1, 0, 1);
     oled.write((char *)"start...", 0, 1, 1, 0, 1);
     #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
     #else
-    while (digitalRead(OK_BUTTON)) {
+    while (digitalRead(OK_BUTTON)) { // no ! because of waiting for button to be pressed
     #endif
         #ifdef OTA
         ota.handle();
@@ -202,7 +203,7 @@ void setup() {
     #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
     #else
-    while (digitalRead(OK_BUTTON)) {
+    while (digitalRead(OK_BUTTON)) { // no ! because of waiting for button to be pressed
     #endif
         #ifdef OTA
         ota.handle();
@@ -210,12 +211,16 @@ void setup() {
         delay(1);
     }
     oled.clear();
-    oled.write((char *)"          owo", 0, 7, 0, 0, 1);
-    oled.write((char *)"             ", 0, 7, 0, 0, 1);
+    oled.write((char *)"         owo", 0, 7, 0, 0, 1);
+    oled.write((char *)"            ", 0, 7, 0, 0, 1);
     ESP.restart();
 }
 
 void loop() {
+    #ifdef OTA // wait how did you get here
+    ota.handle();
+    #endif
+    delay(1);
     // switch (stage) {
     // case 0: // setup
     //     oled.write((char *)"Set spin time", 0, 0, 1, 0, 0);
