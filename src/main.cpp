@@ -99,7 +99,7 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
     oled.write(temp, 0, 0, 1, 0, 1);
 }
 
-void setup() {
+void setup() { 
     Serial.begin(115200);
     // ota.setup(ssid, password, hostname);
     oled.setup(); // head to the file to change display's settings
