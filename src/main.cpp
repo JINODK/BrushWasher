@@ -48,7 +48,7 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
         sprintf(temp, "%02lu sec left", (tarTime - millis()) / 1000);
         oled.write(temp, 0, 7, 1, 0, 1);
         if (!digitalRead(OK_BUTTON)) { // cancel function
-            oled.write((char *)"Canelling in", 0, 1, 1, 0, 1);
+            oled.write((char *)"Cancelling in", 0, 1, 1, 0, 1);
             sprintf(temp, "%d / 50", hold);
             oled.write(temp, 0, 2, 1, 0, 1);
             // bttnStat = 0;
@@ -122,8 +122,6 @@ void setup() {
     // attachInterrupt(digitalPinToInterrupt(UP_BUTTON), upBttn, FALLING);
     // attachInterrupt(digitalPinToInterrupt(DOWN_BUTTON), downBttn, FALLING);
     attachInterrupt(digitalPinToInterrupt(OK_BUTTON), okBttn, FALLING);
-    #else
-    pinMode(OK_BUTTON, INPUT_PULLUP);
     #endif
     oled.clear();
 
@@ -131,7 +129,11 @@ void setup() {
 
     oled.write((char *)"Press button to", 0, 0, 1, 0, 1);
     oled.write((char *)"start...", 0, 1, 1, 0, 1);
+    #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
+    #else
+    while (!digitalRead(OK_BUTTON)) {
+    #endif
         #ifdef OTA
         ota.handle();
         #endif
