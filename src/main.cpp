@@ -71,7 +71,9 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
                 #else
                 while (!digitalRead(OK_BUTTON)) {
                 #endif
-                    // ota.handle();
+                    #ifdef OTA
+                    ota.handle();
+                    #endif
                     delay(1);
                 }
                 ESP.restart();
@@ -79,6 +81,9 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
             } else {
                 hold++;
             }
+            #ifdef OTA
+            ota.handle();
+            #endif
         } else if (hold) {
             oled.write((char *)"            ", 0, 1, 1, 0, 1);
             oled.write((char *)"            ", 0, 2, 1, 0, 1);
@@ -132,7 +137,7 @@ void setup() {
     #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
     #else
-    while (!digitalRead(OK_BUTTON)) {
+    while (digitalRead(OK_BUTTON)) {
     #endif
         #ifdef OTA
         ota.handle();
@@ -179,10 +184,12 @@ void setup() {
     // blow dry
     digitalWrite(FAN, HIGH);
     digitalWrite(HEATER, HIGH);
+    servo.write(spinSpeed);
     taskTimer((char *)"Dry blow", dryBlow);
     // stop dryer
     digitalWrite(FAN, LOW);
     digitalWrite(HEATER, LOW);
+    servo.write(0);
 
     oled.clear();
     oled.write((char *)"Task done! Press", 0, 0, 1, 0, 1);
@@ -193,7 +200,7 @@ void setup() {
     #ifdef USE_BUTTON_INTERRUPT
     while (bttnStat != 3) {
     #else
-    while (!digitalRead(OK_BUTTON)) {
+    while (digitalRead(OK_BUTTON)) {
     #endif
         #ifdef OTA
         ota.handle();
