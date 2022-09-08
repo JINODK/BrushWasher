@@ -101,7 +101,9 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
 
 void setup() { 
     Serial.begin(115200);
-    // ota.setup(ssid, password, hostname);
+    #ifdef OTA
+    ota.setup(ssid, password, hostname);
+    #endif
     oled.setup(); // head to the file to change display's settings
     pinMode(PUMP, OUTPUT);
     pinMode(VALVE, OUTPUT);
