@@ -55,8 +55,8 @@ void taskTimer(char* taskTitle, uint8_t taskTime) {
             if (hold == 50) {
                 // disable everything
                 servo.write(0);
-                digitalWrite(PUMP, LOW);
-                digitalWrite(VALVE, LOW);
+                digitalWrite(PUMP_IN, LOW);
+                digitalWrite(PUMP_OUT, LOW);
                 digitalWrite(HEATER, LOW);
                 digitalWrite(FAN, LOW);
 
@@ -106,8 +106,8 @@ void setup() {
     ota.setup(ssid, password, hostname);
     #endif
     oled.setup(); // head to the file to change display's settings
-    pinMode(PUMP, OUTPUT);
-    pinMode(VALVE, OUTPUT);
+    pinMode(PUMP_IN, OUTPUT);
+    pinMode(PUMP_OUT, OUTPUT);
     pinMode(HEATER, OUTPUT);
     pinMode(FAN, OUTPUT);
     pinMode(OK_BUTTON, INPUT_PULLUP);
@@ -120,8 +120,8 @@ void setup() {
     delay(10);
     servo.writeMicroseconds(1000);
     // turn everything off just to be safe
-    digitalWrite(PUMP, LOW);
-    digitalWrite(VALVE, LOW);
+    digitalWrite(PUMP_IN, LOW);
+    digitalWrite(PUMP_OUT, LOW);
     digitalWrite(HEATER, LOW);
     digitalWrite(FAN, LOW);
 
@@ -149,6 +149,11 @@ void setup() {
     }
     oled.clear();
     delay(100);
+    // start pump
+    digitalWrite(PUMP_IN, HIGH);
+    taskTimer((char *)"Pump", pumpTime);
+    // stop pump
+    digitalWrite(PUMP_IN, LOW);
     // spin motor
     servo.write(spinSpeed);
     taskTimer((char *)"Washing", spinTime);
@@ -157,17 +162,17 @@ void setup() {
 
     delay(1000);
     // drain water
-    digitalWrite(VALVE, HIGH);
+    digitalWrite(PUMP_OUT, HIGH);
     taskTimer((char *)"Drain", drainTime);
-    // close valve
-    digitalWrite(VALVE, LOW);
+    // close pump
+    digitalWrite(PUMP_OUT, LOW);
 
     delay(1000);
     // start pump
-    digitalWrite(PUMP, HIGH);
+    digitalWrite(PUMP_IN, HIGH);
     taskTimer((char *)"Pump", pumpTime);
     // stop pump
-    digitalWrite(PUMP, LOW);
+    digitalWrite(PUMP_IN, LOW);
 
     delay(1000);
     // spin motor
@@ -178,16 +183,16 @@ void setup() {
 
     delay(1000);
     // drain water
-    digitalWrite(VALVE, HIGH);
+    digitalWrite(PUMP_OUT, HIGH);
     taskTimer((char *)"Drain", drainTime);
     // close valve
-    digitalWrite(VALVE, LOW);
+    digitalWrite(PUMP_OUT, LOW);
 
     delay(1000);
     // blow dry
     digitalWrite(FAN, HIGH);
     digitalWrite(HEATER, HIGH);
-    servo.write(spinSpeed);
+    servo.write(spinSpeed2);
     taskTimer((char *)"Dry blow", dryBlow);
     // stop dryer
     digitalWrite(FAN, LOW);
@@ -333,7 +338,7 @@ void loop() {
     
     // case 2: // draining
     //     oled.write((char *)"Draining", 0, 0, 1, 0, 0);
-    //     // digitalWrite(VALVE, HIGH);
+    //     // digitalWrite(PUMP_OUT, HIGH);
     //     currTime = millis();
     //     targetTime = currTime + (drainTime * 1000);
     //     while (millis() < targetTime) {
@@ -390,7 +395,7 @@ void loop() {
     //     break;
     // case 5: // draining
     //     oled.write((char *)"Draining", 0, 0, 1, 0, 0);
-    //     // digitalWrite(VALVE, HIGH);
+    //     // digitalWrite(PUMP_OUT, HIGH);
     //     currTime = millis();
     //     targetTime = currTime + (drainTime * 1000);
     //     while (millis() < targetTime) {
@@ -410,7 +415,7 @@ void loop() {
 
     // case 6: // dry blow
     //     oled.write((char *)"Dry blow", 0, 0, 1, 0, 0);
-    //     // digitalWrite(VALVE, HIGH);
+    //     // digitalWrite(PUMP_OUT, HIGH);
     //     currTime = millis();
     //     targetTime = currTime + (dryBlow * 1000);
     //     while (millis() < targetTime) {
