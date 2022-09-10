@@ -3,7 +3,7 @@
 
 /*****FLAGS*****/
 // #define OTA
-#define USE_BUTTON_INTERRUPT
+// #define USE_BUTTON_INTERRUPT
 #define DEBUG
 
 /*****HARD-CODED CONFIGURATION*****/
