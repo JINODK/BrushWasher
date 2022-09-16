@@ -22,10 +22,12 @@ const char* hostname = "Mini-washing-machine";
 
 /*****DEFAULT TIMER CONFIGURATION*****/
 // uint8_t washTime = 30;
-uint8_t spinTime = 20;//30;
-uint8_t spinSpeed = 12; // out of 90
-uint8_t spinSpeed2 = 20; // drying spin speed
-uint8_t drainTime = 3;//10;
-uint8_t pumpTime = 3;
-uint8_t dryBlow = 20;//200;
+uint8_t spinTime = 30;//30;
+uint8_t spinSpeed = 16; // out of 90
+uint8_t spinSpeed2 = 26; // drying spin speed
+uint8_t cleanPump = 3; // pump water to clean bubbles
+uint8_t drainTime = 7;//10;
+uint8_t cleanFlush = 5; // flush bubble water
+uint8_t pumpTime = 7;
+uint8_t dryBlow = 45;//200;
 // uint8_t stage = 1; // skip over setup stage

@@ -148,12 +148,15 @@ void setup() {
         delay(1);
     }
     oled.clear();
+
     delay(100);
     // start pump
     digitalWrite(PUMP_IN, HIGH);
     taskTimer((char *)"Pump", pumpTime);
     // stop pump
     digitalWrite(PUMP_IN, LOW);
+    
+    delay(1000);
     // spin motor
     servo.write(spinSpeed);
     taskTimer((char *)"Washing", spinTime);
@@ -162,12 +165,30 @@ void setup() {
 
     delay(1000);
     // drain water
+    servo.write(spinSpeed);
     digitalWrite(PUMP_OUT, HIGH);
     taskTimer((char *)"Drain", drainTime);
     // close pump
+    servo.write(0);
     digitalWrite(PUMP_OUT, LOW);
 
     delay(1000);
+    // start pump
+    digitalWrite(PUMP_IN, HIGH);
+    taskTimer((char *)"Pump", cleanPump);
+    // stop pump
+    digitalWrite(PUMP_IN, LOW);
+
+    delay(1000);
+    // drain water
+    servo.write(spinSpeed);
+    digitalWrite(PUMP_OUT, HIGH);
+    taskTimer((char *)"Drain", cleanFlush);
+    // close pump
+    servo.write(0);
+    digitalWrite(PUMP_OUT, LOW);
+
+    delay(100);
     // start pump
     digitalWrite(PUMP_IN, HIGH);
     taskTimer((char *)"Pump", pumpTime);
@@ -183,9 +204,11 @@ void setup() {
 
     delay(1000);
     // drain water
+    servo.write(spinSpeed);
     digitalWrite(PUMP_OUT, HIGH);
     taskTimer((char *)"Drain", drainTime);
     // close valve
+    servo.write(0);
     digitalWrite(PUMP_OUT, LOW);
 
     delay(1000);
@@ -198,6 +221,9 @@ void setup() {
     digitalWrite(FAN, LOW);
     digitalWrite(HEATER, LOW);
     servo.write(0);
+    
+    // digitalWrite(PUMP_OUT, HIGH);
+    // taskTimer((char *)"Dry blow", 100);
 
     oled.clear();
     oled.write((char *)"Task done! Press", 0, 0, 1, 0, 1);
