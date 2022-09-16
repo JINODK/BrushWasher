@@ -8,7 +8,7 @@
 
 /*****HARD-CODED CONFIGURATION*****/
 const char* ssid = "JINODK";
-const char* password = "jinodk2003";
+const char* password = "nevergonnaletyoudown";
 const char* hostname = "Mini-washing-machine";
 
 /*****HARDWARE PINS DEFINITION*****/
